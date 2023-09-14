@@ -5,10 +5,10 @@ storage "raft" {
   node_id = "vault_3"
 
   retry_join  {
-    leader_api_addr = "http://192.168.56.4"
+    leader_api_addr = "http://192.168.56.4:8200"
   }
   retry_join  {
-    leader_api_addr = "http://192.168.56.5"
+    leader_api_addr = "http://192.168.56.5:8200"
   }
 }
 

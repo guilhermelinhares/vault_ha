@@ -4,19 +4,13 @@
     status_code: 200,429,472,501,503
   register: vault_health_response
   
-- name: "Check Vault Initialized"
+- name: "Check Vault Sealed"
   ansible.builtin.debug:
-    msg: Vault Initialized is "{{ vault_health_response.json.initialized }}"
+    msg: Vault Sealed is "{{ vault_health_response.json.sealed }}"
 
 - name: Init and Unseal Vault
-  when: "vault_health_response.json.initialized == false"
+  when: "vault_health_response.json.sealed == true"
   block:
-    - name: Join raft cluster
-      ansible.builtin.shell: vault operator raft join "{{ vault_leader_addr }}"
-      environment:
-        VAULT_ADDR: "{{ vault_addr }}"
-        VAULT_TOKEN: "{{ vault_root_token }}"
-
     - name: Unseal vault
       uri:
         url: "{{ vault_addr }}/v1/sys/unseal"
@@ -29,6 +23,12 @@
         - "{{ vault_keys }}"
       when:
         - vault_health_response.json.sealed == true
+    
+    # - name: Join raft cluster
+    #   ansible.builtin.shell: vault operator raft join "{{ vault_leader_addr }}"
+    #   environment:
+    #     VAULT_ADDR: "{{ vault_addr }}"
+    #     VAULT_TOKEN: "{{ vault_root_token }}"
     
 - name: "Vault Status is"
   ansible.builtin.debug:
