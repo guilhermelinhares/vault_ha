@@ -5,7 +5,7 @@
     ls -lha
   environment:
     VAULT_ADDR: "{{ vault_addr }}"
-    VAULT_TOKEN: "hvs.4meJNDIjGKF11eZVjcN3qhnq"
+    VAULT_TOKEN: "{{ vault_root_token }}"
   register: list_snap
 
 - name: Print snap file
