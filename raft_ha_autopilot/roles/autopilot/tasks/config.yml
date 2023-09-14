@@ -1,0 +1,54 @@
+---
+# https://docs.ansible.com/ansible/2.5/modules/package_facts_module.html
+- name: "Gather the package facts"
+  ansible.builtin.package_facts:
+    manager: "auto"
+
+- name: Export Environment VAULT_TOKEN and VAULT_ADDR
+  ansible.builtin.shell: |
+    echo "export VAULT_TOKEN={{ vault_root_token }}" >> /home/vagrant/.bash_profile
+    echo "export VAULT_ADDR={{ vault_addr }}" >> /home/vagrant/.bash_profile
+
+- name: Config autopilot
+  ansible.builtin.shell: |
+    vault operator raft autopilot set-config \
+    -dead-server-last-contact-threshold=1m \
+    -server-stabilization-time=30 \
+    -cleanup-dead-servers=true \
+    -min-quorum=3
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_root_token }}"
+  
+- name: Autopilot get-config
+  ansible.builtin.shell: vault operator raft autopilot get-config
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_root_token }}"
+  register: conf_pilot
+
+- name: Print autopilot confg
+  ansible.builtin.debug:
+    msg: "{{conf_pilot.stdout_lines}}"
+
+- name: Autopilot state
+  ansible.builtin.shell: vault operator raft autopilot state
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_root_token }}"
+  register: pilot_state
+
+- name: Print autopilot state
+  ansible.builtin.debug:
+    msg: "{{pilot_state.stdout_lines}}"
+
+- name: List raft Peers 
+  ansible.builtin.shell: vault operator raft list-peers
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_root_token }}"
+  register: list_raft_p
+
+- name: Print raft state
+  ansible.builtin.debug:
+    msg: "{{list_raft_p.stdout_lines}}"

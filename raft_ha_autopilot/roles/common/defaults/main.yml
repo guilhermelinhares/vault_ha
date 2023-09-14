@@ -1,0 +1,14 @@
+---
+# defaults file for vault
+vault_owner_default: "{{ user_vault }}"
+vault_group_default: "{{ group_vault }}"
+user_system: "{{ usr_sys }}"
+group_system: "{{ gp_sys }}"
+vault_version: 1.14.2
+vault_url: https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_amd64.zip
+binary_path: /usr/local/bin
+vault_config_path: /etc/vault
+vault_data: /opt/vault/data
+vault_lib: /var/lib/vault
+vault_snap: /opt/vault/snap
+var_logs: /var/log/vault

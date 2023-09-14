@@ -1,0 +1,7 @@
+---
+# tasks file for vault
+# - name: Include task config
+#   include_tasks: config.yml
+
+- name: Include task snap
+  include_tasks: snap.yml

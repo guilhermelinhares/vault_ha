@@ -1,0 +1,89 @@
+- name: Status Vault 
+  uri:
+    url: "{{ vault_addr }}/v1/sys/health"
+    status_code: 200,429,472,501,503
+  register: vault_health_response
+  
+- name: "Check Vault Initialized"
+  ansible.builtin.debug:
+    msg: Vault Initialized is "{{ vault_health_response.json.initialized }}"
+
+- name: Init and Unseal Vault
+  when: "vault_health_response.json.initialized == false"
+  block:
+    - name: Create unseal directories
+      file:
+        path: "{{ unseal_keys_dir }}"
+        state: directory
+        owner: "{{ vault_owner_default }}"
+        group: "{{ vault_group_default }}"
+        mode: 0755
+
+    - name: Create root key directories
+      file:
+        path: "{{ root_token_dir }}"
+        state: directory
+        owner: "{{ vault_owner_default }}"
+        group: "{{ vault_group_default }}"
+        mode: 0755
+
+    - name: Initialize vault
+      uri:
+        url: "{{ vault_addr }}/v1/sys/init"
+        body:
+          secret_shares: "{{ vault_secret_shares }}"
+          secret_threshold: "{{ vault_secret_threshold }}"
+        body_format: json
+        method: PUT
+      register: init_vault_response
+
+    - name: Save vault root token and keys
+      set_fact:
+        vault_root_token: "{{ init_vault_response.json.root_token }}"
+        vault_keys: "{{ init_vault_response.json.keys_base64 }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: True
+      with_inventory_hostnames:
+        - vault_1
+        - vault_2
+        - vault_3
+
+    - name: Write unseal keys to files
+      copy:
+        dest: "{{ unseal_keys_dir }}/unseal_key_{{ item.0 }}"
+        content: "{{ item.1 }}"
+        owner: "{{ vault_owner_default }}"
+        group: "{{ vault_group_default }}"
+      with_indexed_items: "{{ vault_keys }}"
+
+    - name: Write root token to file
+      copy:
+        content: "{{ vault_root_token }}"
+        dest: "{{ root_token_dir }}/rootkey"
+        owner: "{{ vault_owner_default }}"
+        group: "{{ vault_group_default }}"
+
+    - name: Unseal vault
+      uri:
+        url: "{{ vault_addr }}/v1/sys/unseal"
+        body:
+          key: "{{ item }}"
+        body_format: json
+        method: PUT
+      register: unseal_vault_response
+      with_items:
+        - "{{ vault_keys }}"
+      when:
+        - vault_health_response.json.sealed == true
+    
+    - name: Enable audit log
+      ansible.builtin.shell: vault audit enable file file_path="{{ var_logs }}/audit.log"
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ vault_root_token }}"
+
+- name: "Vault Status is"
+  ansible.builtin.debug:
+    msg: 
+    - Vault Initialized is "{{ vault_health_response.json.initialized }}"
+    - Vault selead is "{{ vault_health_response.json.sealed }}"

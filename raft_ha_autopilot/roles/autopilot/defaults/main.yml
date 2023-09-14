@@ -1,0 +1,4 @@
+---
+# defaults file for vault
+vault_addr: http://{{ inventory_hostname_short }}:8200
+vault_snap: /opt/vault/snap

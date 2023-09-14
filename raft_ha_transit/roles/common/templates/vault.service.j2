@@ -1,0 +1,29 @@
+[Unit]
+Description=Vault Server
+Documentation=https://www.vaultproject.io/docs/
+Requires=network-online.target
+After=network-online.target
+ConditionFileNotEmpty={{vault_config_path}}/config.hcl
+
+[Service]
+User={{ user_vault }}
+Group={{ group_vault }}
+Restart=on-failure
+RestartSec=42s
+ExecStart=/usr/local/bin/vault server -config={{vault_config_path}}/config.hcl
+StandardOutput=/var/log/vault/output.log
+StandardError=/var/log/vault/error.log
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+KillSignal=SIGINT
+LimitMEMLOCK=infinity   
+ProtectSystem=full
+PrivateTmp=yes
+CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
+AmbientCapabilities=CAP_IPC_LOCK
+ProtectHome=read-only
+PrivateDevices=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

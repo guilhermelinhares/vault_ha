@@ -1,0 +1,6 @@
+---
+# vars file for vault
+user_vault: vault
+group_vault: vault
+usr_sys: vagrant
+gp_sys: vagrant

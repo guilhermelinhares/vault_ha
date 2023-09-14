@@ -1,0 +1,14 @@
+---
+- name: "Configure Group"
+  group:
+    name: "{{ vault_group_default }}"
+    system: yes
+  become: true
+
+- name: "Create User"
+  user:
+    name: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    system: yes
+    createhome: "no"
+    state: present

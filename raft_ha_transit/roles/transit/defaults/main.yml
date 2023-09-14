@@ -1,0 +1,14 @@
+---
+# defaults file for vault
+vault_owner_default: "{{ user_vault }}"
+vault_group_default: "{{ group_vault }}"
+cluster_vault_name: "Vault_Transit"
+vault_config_path: /etc/vault
+unseal_keys_dir: "{{ vault_config_path }}/unsealKey"
+root_token_dir: "{{ vault_config_path }}/rootKey"
+vault_secret_shares: 5
+vault_secret_threshold: 3
+display_init_response: false
+vault_addr: http://{{ inventory_hostname_short }}:8200
+vault_lib: /var/lib/vault
+var_logs: /var/log/vault

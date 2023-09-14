@@ -1,0 +1,11 @@
+---
+# tasks file for vault
+
+- name: Include task prerequisites
+  include_tasks: prereq.yml
+
+- name: Include task system user
+  include_tasks: config_user.yml
+
+- name: Include task install vault
+  include_tasks: install.yml

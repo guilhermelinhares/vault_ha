@@ -1,0 +1,38 @@
+cluster_addr = "{{ cluster_addr }}"
+
+storage "raft" {
+  path    = "{{ vault_data }}"
+  node_id = "vault_1"
+
+  retry_join  {
+    leader_api_addr = "http://192.168.56.5"
+  }
+  retry_join  {
+    leader_api_addr = "http://192.168.56.6"
+  }
+}
+
+listener "tcp" {
+  address         = "0.0.0.0:8200"
+  cluster_address = "{{ inventory_hostname_short }}:8201"
+  tls_disable = true
+}
+
+seal "transit" {
+  address = "{{ transit_addr }}"
+  disable_renewal = "false"
+  token = "{{ vault_transit_root_token }}"
+  key_name = "autounseal"
+  mount_path = "transit/"
+  tls_skip_verify = "true"
+}
+
+ui = true
+api_addr = "{{ vault_addr }}"
+cluster_name = "{{ cluster_vault_name }}"
+disable_mlock = true
+disable_cache = true
+max_lease_ttl = "12h"
+default_lease_ttl = "6h"
+pid_file = "/var/lib/vault/vault.pid"
+

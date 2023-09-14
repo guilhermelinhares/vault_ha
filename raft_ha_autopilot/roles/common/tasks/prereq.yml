@@ -1,0 +1,8 @@
+---
+- name: Install a list of packages
+  ansible.builtin.apt:
+    update_cache: yes
+    pkg:
+    - unzip
+    - vim
+    - jq

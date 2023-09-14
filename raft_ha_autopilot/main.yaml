@@ -1,0 +1,35 @@
+---
+# - name: "Prepare Cluster Vault"
+#   hosts: all
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - common
+
+# - name: "Install Vault 1"
+#   hosts: vault_1
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - vault_1
+
+# - name: "Install Vault 2"
+#   hosts: vault_2
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - vault_2
+
+# - name: "Install Vault 3"
+#   hosts: vault_3
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - vault_3
+
+- name: "Config AutoPilot"
+  hosts: vault_1
+  gather_facts: true
+  become: true
+  roles:
+    - autopilot

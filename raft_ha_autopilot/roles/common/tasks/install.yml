@@ -1,0 +1,103 @@
+---
+# https://docs.ansible.com/ansible/2.5/modules/package_facts_module.html
+- name: "Gather the package facts"
+  ansible.builtin.package_facts:
+    manager: "auto"
+
+- name: "Gather the package facts"
+  ansible.builtin.package_facts:
+    manager: "auto"
+- name: "Extract and download vault"
+  unarchive:
+    src: "{{ vault_url }}"
+    dest: "{{ binary_path }}"
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    mode: 0755
+    remote_src: true
+    
+- name: Create a directory log if it does not exist
+  file:
+    path: "{{ var_logs }}"
+    state: directory
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    recurse: true
+    mode: 0755
+
+- name: Create a directory data if it does not exist
+  file:
+    path: "{{ vault_data }}"
+    state: directory
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    recurse: true
+    mode: 0755
+  become: true
+
+- name: Create a directory lib if it does not exist
+  file:
+    path: "{{ vault_lib }}"
+    state: directory
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    recurse: true
+    mode: 0755
+
+
+- name: Create a directory config if it does not exist
+  file:
+    path: "{{vault_config_path}}"
+    state: directory
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    recurse: true
+    mode: 0755
+
+- name: Create a directory for snapshot if it does not exist
+  file:
+    path: "{{ vault_snap }}"
+    state: directory
+    owner: "{{ user_system }}"
+    group: "{{ group_system }}"
+    recurse: true
+    mode: 0755
+ 
+- name: Link path logs
+  file:
+    src: "{{ var_logs }}"
+    dest: /var/lib/vault/logs
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    state: link
+
+- name: Touch a output.log
+  ansible.builtin.file:
+    path: /var/log/vault/output.conf
+    state: touch
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    mode: 0755
+
+- name: Touch a error.log
+  ansible.builtin.file:
+    path: /var/log/vault/error.conf
+    state: touch
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    mode: 0755 
+
+- name: Change directory ownership, group and permissions
+  file:
+    path: "{{ vault_lib }}"
+    owner: "{{ vault_owner_default }}"
+    group: "{{ vault_group_default }}"
+    recurse: true
+    mode: 0755
+
+- name: Systemd init file
+  template:
+    src: vault.service.j2
+    dest: /etc/systemd/system/vault.service
+    owner: root
+    group: root

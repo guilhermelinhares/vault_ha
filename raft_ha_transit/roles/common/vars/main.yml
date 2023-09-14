@@ -1,0 +1,4 @@
+---
+# vars file for vault
+user_vault: vault
+group_vault: vault

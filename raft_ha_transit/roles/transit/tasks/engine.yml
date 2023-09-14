@@ -1,0 +1,85 @@
+---
+- name: Export Environment Variable VAULT TOKEN
+  ansible.builtin.shell: |
+    export VAULT_TOKEN=$(cat /etc/vault/rootKey/rootkey)
+    echo $VAULT_TOKEN
+  register: root_token
+
+- name: List secret transit
+  uri:
+    url: "{{ vault_addr }}/v1/sys/mounts/transit"
+    status_code: 200,429,472,501,503,400,403
+    headers:
+      X-Vault-Token: "{{ root_token.stdout }}"
+    method: GET
+  register: list_engine
+
+- name: "Check Engine Transit Created"
+  when: "list_engine.status == 400"
+  ansible.builtin.debug:
+    msg: "{{ list_engine.json.errors }}"
+
+- name: Created a transit engine
+  when: "list_engine.status == 400"
+  block:
+  - name: Enable secret Transit
+    uri:
+      url: "{{ vault_addr }}/v1/sys/mounts/transit"
+      status_code: 204
+      body:
+          type: transit
+      body_format: json
+      headers:
+        X-Vault-Token: "{{ root_token.stdout }}"
+      method: POST
+ 
+  - name: Create secret autounseal
+    uri:
+      url: "{{ vault_addr }}/v1/transit/keys/autounseal"
+      headers:
+        X-Vault-Token: "{{ root_token.stdout }}"
+      method: POST
+  
+  - name: Create policy secret autounseal
+    uri:
+      url: "{{ vault_addr }}/v1/sys/policies/acl/autounseal"
+      status_code: 204
+      headers:
+        X-Vault-Token: "{{ root_token.stdout }}"
+      body: '{"policy": "path \"transit/encrypt/autounseal\" {\n   capabilities = [ \"update\" ]\n}\n\npath \"transit/decrypt/autounseal\" {\n   capabilities = [ \"update\" ]\n}\n"}'
+      body_format: json
+      method: PUT
+  
+  # - name: New Wrap token 
+  #   uri:
+  #     url: "{{ vault_addr }}/v1/auth/token/create-orphan"
+  #     status_code: 200
+  #     headers:
+  #       X-Vault-Token: "{{ root_token.stdout }}"
+  #       X-Vault-Wrap-TTL: 120
+  #     body: '{"policies":["autounseal"], "period":"24h"}'
+  #     body_format: json
+  #     method: POST
+  #   register: wrap_token
+  
+  # - name: Debug wrap
+  #   ansible.builtin.debug:
+  #     msg: "{{ wrap_token.json.wrap_info.token }}"
+
+  # - name: Write wrap token to file
+  #   copy:
+  #     content: "{{  wrap_token.json.wrap_info.token }}"
+  #     dest: "{{ root_token_dir }}/wrapkey"
+  #     owner: "{{ vault_owner_default }}"
+  #     group: "{{ vault_group_default }}"
+  
+  # - name: Save wrap token 
+  #   set_fact:
+  #     vault_wrap_token: "{{ wrap_token.json.wrap_info.token  }}"
+  #   delegate_to: "{{ item }}"
+  #   delegate_facts: True
+  #   with_inventory_hostnames:
+  #     - transit
+  #     - vault_1
+  #     - vault_2
+  #     - vault_3

@@ -1,0 +1,10 @@
+---
+# tasks file for vault
+- name: Include task config
+  include_tasks: config.yml
+
+- name: Include task init vault
+  include_tasks: init_unseal.yml
+
+# - name: Teste
+#   include_tasks: teste.yml

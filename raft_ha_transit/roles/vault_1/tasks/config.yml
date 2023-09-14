@@ -1,0 +1,35 @@
+---
+# https://docs.ansible.com/ansible/2.5/modules/package_facts_module.html
+- name: "Gather the package facts"
+  ansible.builtin.package_facts:
+    manager: "auto"
+
+- name: Config file
+  template:
+    src: config.hcl.j2
+    dest: "{{ vault_config_path }}/config.hcl"
+    owner: "{{ user_vault }}"
+    group: "{{ group_vault }}"
+
+- name: Export Environment VAULT_TOKEN and VAULT_ADDR
+  ansible.builtin.shell: |
+    echo "export VAULT_TOKEN={{ vault_root_token }}" >> /home/vagrant/.bash_profile
+    echo "export VAULT_ADDR={{ vault_addr }}" >> /home/vagrant/.bash_profile
+
+- name: vault service
+  service:
+    name: vault
+    state: started
+    enabled: yes
+
+- name: Change permission directory /var/lib/vault/
+  file:
+    path: "{{ vault_lib }}"
+    mode: 0755
+    recurse: yes
+
+- name: vault service
+  service:
+    name: vault
+    state: restarted
+    enabled: yes
